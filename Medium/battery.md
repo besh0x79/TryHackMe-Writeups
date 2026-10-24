@@ -1,5 +1,7 @@
 Machine: [TryHackMe - Battery](https://tryhackme.com/room/battery)
 
+<img width="1438" height="330" alt="image" src="https://github.com/user-attachments/assets/d3a6a47f-4cf7-40d8-8504-3cfe1382ed4c" />
+
 # Enumeration
 
 first i start with a normal nmap scan:
