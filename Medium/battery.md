@@ -228,9 +228,7 @@ so i thought about it, the file is in my own directory and since i can make chan
 i changed the file name so i can make my own one
 
 <img width="641" height="413" alt="image" src="https://github.com/user-attachments/assets/a826d618-e1f2-4d28-b031-bf9aa8c3e9de" />
-
-
-
+:)
 <img width="311" height="53" alt="image" src="https://github.com/user-attachments/assets/4d1ffe72-22ec-490c-a964-cb74a5befebe" />
 
 and lets execute it
