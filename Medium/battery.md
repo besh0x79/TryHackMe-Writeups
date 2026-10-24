@@ -8,7 +8,7 @@ first i start with a normal nmap scan:
 nmap -sC -sV -oN scan.txt 10.130.181.25
 ```
 
-![[Pasted image 20261023205607.png]]
+<img width="1302" height="386" alt="image" src="https://github.com/user-attachments/assets/bdd3b46b-2552-4e32-8e5a-7fddd7dba973" />
 
 as you can see here there is only two open ports
 
@@ -17,7 +17,7 @@ as you can see here there is only two open ports
 
 lets get started by investigating the web server on port `80`
 
-![[Pasted image 20261023205820.png]]
+<img width="1920" height="1040" alt="image" src="https://github.com/user-attachments/assets/e2f839b4-7785-48e0-ade3-00632598101e" />
 
 as it appears it hosts a simple html page, and there is nothing interesting in the source code or in the js files
 
@@ -27,7 +27,8 @@ so lets fuzz the directories
 gobuster dir -u http://10.130.181.25/ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt 
 ```
 
-![[Pasted image 20261023212956.png]]
+<img width="1505" height="444" alt="image" src="https://github.com/user-attachments/assets/f4442c21-c4bc-46a3-94cf-adbc6ba1dd34" />
+
 
 and as you can see here the output reveals two directories 
 
@@ -37,27 +38,27 @@ there is nothing interesting in `/scripts` i discovered it carefully
 
 what caught my attention is `/report` which when i visit it, a binary file starts to download 
 
-![[Pasted image 20261023213251.png]]
+<img width="609" height="76" alt="image" src="https://github.com/user-attachments/assets/8ba448d9-203f-471d-988c-cdf4b0787175" />
 
-![[Pasted image 20261023213328.png]]
+<img width="1919" height="129" alt="image" src="https://github.com/user-attachments/assets/1cd10bb2-28d9-45c6-90f7-efbfff1ae29a" />
 
 once it is downloaded i tried to decompile it online using https://dogbolt.org/
 
 and i found some interesting things
 
-![[Pasted image 20261023213611.png]]
+<img width="915" height="882" alt="image" src="https://github.com/user-attachments/assets/8a2bb984-fdd1-4b06-a208-548a8deade7f" />
 
 from the code it looks like a program to manage a bank system
 
-![[Pasted image 20261023213729.png]]
+<img width="742" height="187" alt="image" src="https://github.com/user-attachments/assets/e61d8726-6ba6-4bc9-91e2-174ad2f31fcf" />
 
 the program has a login feature and tests the Username and the Password against `guest` and `guest`
 
-![[Pasted image 20261023213829.png]]
+<img width="727" height="330" alt="image" src="https://github.com/user-attachments/assets/23cbdfa7-5ba2-4083-acda-bc60effe4152" />
 
 it also has a list of users' emails
 
-![[Pasted image 20261023213953.png]]
+<img width="932" height="388" alt="image" src="https://github.com/user-attachments/assets/1d7768e6-2356-45fc-9ed9-b321e8b009a8" />
 
 and it seems to have a special email `admin@bank.a` so it uses it to bypass the `strcmp` condition and prints the message "Password Updated Successfully!"
 
@@ -71,13 +72,13 @@ so i returned again to `gobuster` but this time trying to fuzz with some extensi
 gobuster dir -u http://10.130.181.25/ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -x php,js,py,txt,conf
 ```
 
-![[Pasted image 20261023232511.png]]
+<img width="787" height="235" alt="image" src="https://github.com/user-attachments/assets/08fd0319-343b-4e65-9e77-2f4abe23de67" />
 
 and yeah, this actually works and as you see i discovered many interesting new dirs
 
 lets focus on `admin.php`
 
-![[Pasted image 20261023232630.png]]
+<img width="1920" height="1038" alt="image" src="https://github.com/user-attachments/assets/744c9049-680b-4de5-976a-ed4428c54960" />
 
 a simple page lets you either login or register as a new user
 
@@ -95,7 +96,7 @@ so i had to think out of the box
 
 i started looking at the source code of that registration page
 
-![[Pasted image 20261023234354.png]]
+<img width="1066" height="68" alt="image" src="https://github.com/user-attachments/assets/522d0d96-8a29-4742-9e8a-e2931b8f96b8" />
 
 and immediately something caught my eye, there was a `maxlength` attribute in the username input, and i had focused on scenarios like this before.
 
@@ -142,30 +143,30 @@ so we need at least two additional characters to spoof it
 
 the user name that we will use will be `admin@bank.a  XYZ`
 
-![[Pasted image 20261024000953.png]]
+<img width="687" height="56" alt="image" src="https://github.com/user-attachments/assets/b8f16c5c-8544-47b7-9e3a-7b1c4265baad" />
 
-![[Pasted image 20261024001018.png]]
+<img width="409" height="106" alt="image" src="https://github.com/user-attachments/assets/bb33c07a-135d-495d-87a1-a7e320fb0396" />
 
 and yeah it works
 
-![[Pasted image 20261024001119.png]]
+<img width="518" height="692" alt="image" src="https://github.com/user-attachments/assets/5eeb350c-583e-4068-9105-14f26cafc462" />
 
 now i am able to login as `admin@bank.a` with the password `Admin@123`
 
-![[Pasted image 20261024001204.png]]
+<img width="1920" height="811" alt="image" src="https://github.com/user-attachments/assets/1b94996d-95ac-483d-9f1e-dea1a20038f7" />
 
 ---
 # XXE Injection
 
-![[Pasted image 20261024124107.png]]
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/496c289c-d7f5-4536-abbf-5e70f1c45ff7" />
 
 when investigating the command section, this shows a simple page that takes two inputs: `Account Number` and `Remark`. at first look it seems normal, but lets see what is behind it using burp
 
-![[Pasted image 20261024125251.png]]
+<img width="713" height="613" alt="image" src="https://github.com/user-attachments/assets/b5c65912-d2b8-4d81-b852-45cdc130ca07" />
 
 this is the request that the command section made, as you can see it sends the data in XML form, so what about XML Injection?
 
-![[Pasted image 20261024125803.png]]
+<img width="697" height="505" alt="image" src="https://github.com/user-attachments/assets/88a68470-a96d-4121-b987-bed2074903c4" />
 
 i tried this simple payload to read the content of `/etc/passwd`
 
@@ -176,7 +177,7 @@ i tried this simple payload to read the content of `/etc/passwd`
   <!ENTITY xxe SYSTEM "file:///etc/passwd" >]><foo>&xxe;</foo>
 ```
 
-![[Pasted image 20261024130524.png]]
+<img width="605" height="553" alt="image" src="https://github.com/user-attachments/assets/d4f9d6b1-8dd7-496c-a328-ab165e6af32f" />
 
 then i tried to read the content of `acc.php` but it didn't work in the normal way
 
@@ -186,24 +187,23 @@ so i used a different technique using `php://filter`
 php://filter/read=convert.base64-encode/resource=acc.php
 ```
 
-![[Pasted image 20261024130801.png]]
+<img width="708" height="569" alt="image" src="https://github.com/user-attachments/assets/6a845b39-7e79-4aee-923f-3cfdf1423364" />
 
 do you think it will work?
 
-![[Pasted image 20261024130854.png]]
+<img width="740" height="662" alt="image" src="https://github.com/user-attachments/assets/ec762bcc-00e3-4911-952d-f074dc06bf41" />
 
 yah boy it worked, let's decode the content
 
-![[Screenshot From 2026-10-24 13-30-30(1).jpg]]
+<img width="668" height="124" alt="image" src="https://github.com/user-attachments/assets/f0a75d6c-f817-48aa-974a-d6f93b4bcf38" />
 
 once i decoded it i found creds in the code and it seems to work with ssh
 
-
-![[Pasted image 20261024133451.png]]
+<img width="743" height="527" alt="image" src="https://github.com/user-attachments/assets/19d8cdcf-2678-47dd-aa9b-79245957d3bf" />
 
 here we go, these creds worked and now i have registered as `cyber` on this machine
 
-![[image.jpg]]
+<img width="492" height="127" alt="image" src="https://github.com/user-attachments/assets/825163e3-4993-40bb-a1af-e37ad6231759" />
 
 and here we got the first flag
 
@@ -211,33 +211,33 @@ and here we got the first flag
 
 # Privilege Escalation 
 
-![[Pasted image 20261024140229.png]]
+<img width="1003" height="169" alt="image" src="https://github.com/user-attachments/assets/5200545a-a7eb-4a93-8787-46260d32ec7b" />
 
 as you can see here in our directory there is a file named `run.py`, this file belongs to root and we can execute it with sudo rights
 
 so lets execute it 
 
-![[Pasted image 20261024140414.png]]
+<img width="1004" height="92" alt="image" src="https://github.com/user-attachments/assets/9768aa63-d8bc-489c-a7f6-020c99848c86" />
 
 nothing odd, it writes a message in the terminal, since i can't open this file and read the source code, i have to think of something special 
 
 so i thought about it, the file is in my own directory and since i can make changes in this dir, so why not make my own run.py and execute it with sudo rights and get a privileged shell
 
-![[Pasted image 20261024140732.png]]
+<img width="358" height="27" alt="image" src="https://github.com/user-attachments/assets/b84c2fcc-d5c2-4f2b-87b6-4801917201af" />
 
 i changed the file name so i can make my own one
 
-![[Pasted image 20261024141025.png]]
+<img width="641" height="413" alt="image" src="https://github.com/user-attachments/assets/a826d618-e1f2-4d28-b031-bf9aa8c3e9de" />
 
-![[Pasted image 20261024141046.png]]
+<img width="311" height="53" alt="image" src="https://github.com/user-attachments/assets/4d1ffe72-22ec-490c-a964-cb74a5befebe" />
 
 and lets execute it
 
-![[Pasted image 20261024141137.png]]
+<img width="529" height="165" alt="image" src="https://github.com/user-attachments/assets/fd2d02aa-0de8-488c-80c5-65667b7d10a8" />
 
 pretty cool dude we are root
 
-![[Pasted image 20261024141217.png]]
+<img width="476" height="139" alt="image" src="https://github.com/user-attachments/assets/1415414b-fc45-4da8-b65c-db3f954845c6" />
 
 and here is the rest of your flags
 
